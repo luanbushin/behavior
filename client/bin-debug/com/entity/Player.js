@@ -11,20 +11,18 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var MapItem = (function (_super) {
-    __extends(MapItem, _super);
-    function MapItem(num) {
+var Player = (function (_super) {
+    __extends(Player, _super);
+    function Player() {
         var _this = _super.call(this) || this;
-        if (num == 0)
-            _this.graphics.beginFill(0xFF8C00);
-        else if (num == 1)
-            _this.graphics.beginFill(0x8B7D7B);
-        _this.graphics.drawRect(5, 5, 10, 10);
-        _this.graphics.endFill();
-        _this.cacheAsBitmap = true;
+        _this.bitmap = new egret.Bitmap();
+        _this.addChild(_this.bitmap);
+        _this.bitmap.texture = RES.getRes("player_png");
+        _this.bitmap.width = 10;
+        _this.bitmap.height = 10;
         return _this;
     }
-    return MapItem;
-}(egret.Shape));
-__reflect(MapItem.prototype, "MapItem");
-//# sourceMappingURL=MapItem.js.map
+    return Player;
+}(egret.Sprite));
+__reflect(Player.prototype, "Player");
+//# sourceMappingURL=Player.js.map

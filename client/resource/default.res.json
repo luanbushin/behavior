@@ -1,20 +1,45 @@
 {
 	"groups": [
 		{
-			"keys": "egret_icon_png,description_json",
+			"keys": "egret_icon_png,description_json,end_png,MapItemBg_png,player_png,route_png,red_png",
 			"name": "preload"
 		}
 	],
 	"resources": [
 		{
-			"name": "egret_icon_png",
+			"url": "assets/egret_icon.png",
 			"type": "image",
-			"url": "assets/egret_icon.png"
+			"name": "egret_icon_png"
 		},
 		{
-			"name": "description_json",
+			"url": "config/description.json",
 			"type": "json",
-			"url": "config/description.json"
+			"name": "description_json"
+		},
+		{
+			"url": "assets/end.png",
+			"type": "image",
+			"name": "end_png"
+		},
+		{
+			"url": "assets/MapItemBg.png",
+			"type": "image",
+			"name": "MapItemBg_png"
+		},
+		{
+			"url": "assets/player.png",
+			"type": "image",
+			"name": "player_png"
+		},
+		{
+			"url": "assets/route.png",
+			"type": "image",
+			"name": "route_png"
+		},
+		{
+			"url": "assets/red.png",
+			"type": "image",
+			"name": "red_png"
 		}
 	]
 }

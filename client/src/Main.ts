@@ -27,27 +27,17 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-class Main extends egret.DisplayObjectContainer {
-
+class Main extends eui.Scroller {
     /**
      * 加载进度界面
-     * Process interface loading
+     * loading process interface
      */
     private loadingView: LoadingUI;
-
-    public constructor() {
-        super();
-        this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
-    }
-
-    private onAddToStage(event: egret.Event) {
+    protected createChildren(): void {
+        super.createChildren();
 
         egret.lifecycle.addLifecycleListener((context) => {
             // custom lifecycle plugin
-
-            context.onUpdate = () => {
-                console.log('hello,world')
-            }
         })
 
         egret.lifecycle.onPause = () => {
@@ -58,249 +48,429 @@ class Main extends egret.DisplayObjectContainer {
             egret.ticker.resume();
         }
 
-
+        //inject the custom material parser
+        //注入自定义的素材解析器
+        // let assetAdapter = new AssetAdapter();
+        // egret.registerImplementation("eui.IAssetAdapter", assetAdapter);
+        // egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
+        //Config loading process interface
         //设置加载进度界面
-        //Config to load process interface
         this.loadingView = new LoadingUI();
         this.stage.addChild(this.loadingView);
-
+        // initialize the Resource loading library
         //初始化Resource资源加载库
-        //initiate Resource loading library
         RES.addEventListener(RES.ResourceEvent.CONFIG_COMPLETE, this.onConfigComplete, this);
         RES.loadConfig("resource/default.res.json", "resource/");
     }
-
     /**
-     * 配置文件加载完成,开始预加载preload资源组。
-     * configuration file loading is completed, start to pre-load the preload resource group
+     * 配置文件加载完成,开始预加载皮肤主题资源和preload资源组。
+     * Loading of configuration file is complete, start to pre-load the theme configuration file and the preload resource group
      */
     private onConfigComplete(event: RES.ResourceEvent): void {
         RES.removeEventListener(RES.ResourceEvent.CONFIG_COMPLETE, this.onConfigComplete, this);
+        // load skin theme configuration file, you can manually modify the file. And replace the default skin.
+        //加载皮肤主题配置文件,可以手动修改这个文件。替换默认皮肤。
+        // let theme = new eui.Theme("resource/default.thm.json", this.stage);
+        // theme.addEventListener(eui.UIEvent.COMPLETE, this.onThemeLoadComplete, this);
+
         RES.addEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
         RES.addEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
         RES.addEventListener(RES.ResourceEvent.GROUP_PROGRESS, this.onResourceProgress, this);
         RES.addEventListener(RES.ResourceEvent.ITEM_LOAD_ERROR, this.onItemLoadError, this);
         RES.loadGroup("preload");
     }
-
+    private isThemeLoadEnd: boolean = false;
+    /**
+     * 主题文件加载完成,开始预加载
+     * Loading of theme configuration file is complete, start to pre-load the 
+     */
+    private onThemeLoadComplete(): void {
+        this.isThemeLoadEnd = true;
+        this.createScene();
+    }
+    private isResourceLoadEnd: boolean = false;
     /**
      * preload资源组加载完成
-     * Preload resource group is loaded
+     * preload resource group is loaded
      */
-    private onResourceLoadComplete(event: RES.ResourceEvent) {
+    private onResourceLoadComplete(event: RES.ResourceEvent): void {
         if (event.groupName == "preload") {
             this.stage.removeChild(this.loadingView);
             RES.removeEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
             RES.removeEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
             RES.removeEventListener(RES.ResourceEvent.GROUP_PROGRESS, this.onResourceProgress, this);
             RES.removeEventListener(RES.ResourceEvent.ITEM_LOAD_ERROR, this.onItemLoadError, this);
-            this.createGameScene();
+            this.isResourceLoadEnd = true;
+            this.createScene();
         }
     }
-
+    private createScene() {
+          this.startCreateScene();
+        // if (this.isThemeLoadEnd && this.isResourceLoadEnd) {
+        //     this.startCreateScene();
+        // }
+    }
     /**
      * 资源组加载出错
      *  The resource group loading failed
      */
-    private onItemLoadError(event: RES.ResourceEvent) {
+    private onItemLoadError(event: RES.ResourceEvent): void {
         console.warn("Url:" + event.resItem.url + " has failed to load");
     }
-
     /**
      * 资源组加载出错
-     *  The resource group loading failed
+     * Resource group loading failed
      */
-    private onResourceLoadError(event: RES.ResourceEvent) {
+    private onResourceLoadError(event: RES.ResourceEvent): void {
         //TODO
         console.warn("Group:" + event.groupName + " has failed to load");
         //忽略加载失败的项目
-        //Ignore the loading failed projects
+        //ignore loading failed projects
         this.onResourceLoadComplete(event);
     }
-
     /**
      * preload资源组加载进度
-     * Loading process of preload resource group
+     * loading process of preload resource
      */
-    private onResourceProgress(event: RES.ResourceEvent) {
+    private onResourceProgress(event: RES.ResourceEvent): void {
         if (event.groupName == "preload") {
             this.loadingView.setProgress(event.itemsLoaded, event.itemsTotal);
         }
     }
 
-    private textfield: egret.TextField;
 
+    
     private onSocketOpen():void {   
         console.log("连接成功");    
-        Main.webSocket.writeUTF("creatroom,"+46545);
+
     }
     private onReceiveMessage(e:egret.Event):void {   
         var msg = Main.webSocket.readUTF(); 
 
         this.onmessage(msg);   
-        console.log("收到数据：" );
-   
     }
+
+    private view:EngineMain;
+    public static webSocket:egret.WebSocket;
+
+    public scroller:eui.Scroller;
+    public group:eui.Group;
+    protected startCreateScene(): void {
+//         this.group = new eui.Group;
+//         this.scroller = new eui.Scroller;
+//         this.scroller.width = 200;
+//         this.scroller.height = 300;
+//         this.scroller.viewport = this.group;
+//         this.addChild(this.scroller);
+// this.group.width = 2000;
+// this.group.height = 2000;
+        EngineMain.instance.init(this);
+
+
+    //     Main.webSocket = new egret.WebSocket();        
+    //     Main.webSocket.addEventListener(egret.ProgressEvent.SOCKET_DATA, this.onReceiveMessage, this);                            
+    //     Main.webSocket.addEventListener(egret.Event.CONNECT, this.onSocketOpen, this);    
+    //     Main.webSocket.connect("39.105.5.178",4788);
+
+    //   this.initchooseRoomPanel();
+    }
+    // private textfield: egret.TextField;
+    private chooseRoomPanel:egret.Sprite;
+     private initchooseRoomPanel():void{
+        this.chooseRoomPanel = new egret.Sprite;
+        let textfield = new egret.TextField();
+        textfield.text = "在下面输入房间号";
+        this.chooseRoomPanel.addChild(textfield);
+        textfield.width = 500;
+        textfield.size = 24;
+        textfield.textColor = 0xffffff;
+        textfield.x = 0;
+        textfield.y = 30;
+
+        textfield = new egret.TextField();
+        textfield.text = "";
+        this.chooseRoomPanel.addChild(textfield);
+        textfield.type = egret.TextFieldType.INPUT;
+        textfield.width = 500;
+        textfield.size = 24;
+        textfield.textColor = 0x000000;
+        textfield.background = true;
+        textfield.x = 0;
+        textfield.y = 80;
+        this.textfield = textfield;
+
+
+        let button = new eui.Button();
+        button.label = "创建房间";
+        button.x = 200;
+        button.y = 150;
+        this.chooseRoomPanel.addChild(button);
+        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
+
+        button = new eui.Button();
+        button.label = "加入房间";
+        button.x = 400;
+        button.y = 150;
+        this.chooseRoomPanel.addChild(button);
+        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick1, this);
+        this.addChild(this.chooseRoomPanel);
+
+
+    }
+
+    private onButtonClick(e: egret.TouchEvent) {
+        //var cmd = this.textfield.text + "," + mapManager.getInstance().getMapData()+","+"1;1"+","+ mapManager.getInstance().endPoint; 
+             this.startgame();
+        //  this.view.initmap( mapManager.getInstance().getMapData(),mapManager.getInstance().endPoint);
+        // console.log("=========================================="+mapManager.getInstance().endPoint);  
+        //Main.webSocket.writeUTF("creatroom,"+cmd);
+       // this.textfield.text = "";
+    }
+
+    private onButtonClick1(e: egret.TouchEvent) {
+        var cmd = this.textfield.text;   
+        Main.webSocket.writeUTF("jionroom,"+cmd);
+       // this.textfield.text = "";
+    }
+
+    private startgame():void{
+
+        // this.chooseRoomPanel.visible = false;
+                
+        // Main.webSocket.writeUTF("creatroom,"+46545);
+        // this.manList = new Array<TestMan>();
+        // this.view  = new EngineMain();
+        // this.addChild(this.view);
+
+        // var button = new eui.Button();
+        // button.label = "上";
+        // button.x = 450;
+        // button.y = 900;
+        // this.addChild(button);
+        // button.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onup, this);
+
+        // button = new eui.Button();
+        // button.label = "下";
+        // button.x =  450;
+        // button.y = 1100;
+        // this.addChild(button);
+        // button.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.ondown, this);
+
+        // button = new eui.Button();
+        // button.label = "左";
+        // button.x = 300;
+
+
+        // button.y = 1000;
+        // this.addChild(button);
+        // button.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onleft, this);
+
+        // button = new eui.Button();
+        // button.label = "右";
+        // button.x = 600;
+        // button.y = 1000;
+        // this.addChild(button);
+        // button.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onright, this);
+
+        this.addEventListener(egret.TouchEvent.TOUCH_END,this.touchEnd,this)
+
+        // this._timer = new egret.Timer(500);
+        // this.addEventListener(egret.TimerEvent.TIMER,this.timeHandle,this)
+        this.addEventListener(egret.Event.ENTER_FRAME,this.timeHandle,this)
+
+        this.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.touchbegin,this);
+        this.addEventListener(egret.TouchEvent.TOUCH_MOVE,this.touchmove,this);
+    }
+
+    private clickx:number;
+    private clicky:number;
+    private touchbegin(e: egret.TouchEvent):void{
+        this.clickx = e.$stageX;
+        this.clicky = e.$stageY;
+              this.moveCd =0;
+       // console.log(this.clickx,this.clicky);
+    }
+
+    private touchmove(e: egret.TouchEvent):void{
+        //        console.log("move"+this.clickx,this.clicky);
+        if(Math.abs(e.$stageX - this.clickx) > Math.abs(e.$stageY - this.clicky)){
+            if(e.$stageX > this.clickx){
+        this.fangxiang = 4;
+            }else{
+        this.fangxiang = 3;
+            }
+        }else{
+            if(e.$stageY > this.clicky){
+        this.fangxiang = 2;
+            }else{
+                this.fangxiang = 1;
+            }
+        }
+                this.clickx = e.$stageX;
+        this.clicky = e.$stageY;
+    }
+
+    private touchEnd(e:egret.TouchEvent):void{
+        // this._timer.stop();
+        this.fangxiang = 0;
+
+    }
+
+    private startFarme():void{
+
+
+    }
+    private timeHandle(e:egret.Event):void{
+        // console.log(this.fangxiang);
+        if(this.moveCd < 0){
+            if(this.fangxiang == 1){
+                if(this.view.getTargetCanGo(this.curX,this.curY-1))
+                    Main.webSocket.writeUTF("week,"+this.roomId+","+ this.curX +","+(this.curY-1));
+            }else if(this.fangxiang == 2){
+                if(this.view.getTargetCanGo(this.curX,this.curY+1))
+                    Main.webSocket.writeUTF("week,"+this.roomId+","+ this.curX +","+(this.curY+1));
+            }else if(this.fangxiang == 3){
+                if(this.view.getTargetCanGo(this.curX-1,this.curY))
+                    Main.webSocket.writeUTF("week,"+this.roomId+","+(this.curX-1)+","+ this.curY)
+            }else if(this.fangxiang == 4){
+                if(this.view.getTargetCanGo(this.curX+1,this.curY))
+                    Main.webSocket.writeUTF("week,"+this.roomId+","+(this.curX+1)+","+ this.curY)
+            }
+            this.moveCd = 3;
+        }
+        this.moveCd --;
+    }
+    // private _timer:egret.Timer;
+    private fangxiang:number = 0;
+    private moveCd:number;
+
+    private onup(e:egret.TouchEvent):void{
+        this.fangxiang = 1;
+        this.moveCd =0;
+        // this.timeHandle(null);
+        // this._timer.start();
+    }
+
+    private ondown(e:egret.TouchEvent):void{
+        this.fangxiang = 2;
+        // this._timer.start();
+        // this.timeHandle(null);
+              this.moveCd =0;
+    }
+
+    private onleft(e:egret.TouchEvent):void{
+        this.fangxiang = 3;
+        // this._timer.start();
+        // this.timeHandle(null);
+              this.moveCd =0;
+    }
+
+    private onright(e:egret.TouchEvent):void{
+        this.fangxiang = 4;
+        // this._timer.start();
+        // this.timeHandle(null);
+              this.moveCd =0;
+    }
+
+
+
+
+    private tishitxt:eui.Label;
+    private tishi(str:string):void{
+        if(this.tishitxt == null){
+            this.tishitxt = new eui.Label();
+            this.addChild(this.tishitxt);
+        }
+        this.tishitxt.y = 500;
+        this.tishitxt.width = 640;
+        this.tishitxt.text = str;
+        this.tishitxt.textAlign = "centre";
+        var tw = egret.Tween.get( this.tishitxt);
+        tw.to( {y:-200}, 600 );
+    }
+
+
+
+
+    private curX:number =1;
+    private curY:number =1;
+    private roomId:string;
+
     private manList:Array<TestMan>;
 
+    private playerIndex:number; 
     private onmessage(str:string){
         var messageArr:string[] = str.split(",");
-       console.log(messageArr[0]);
+    //    console.log(str);
         switch(messageArr[0]){
             case "mapdata":
-                this.view.initmap(messageArr[1]);
+             console.log(str);
+                this.startgame();
+                this.roomId = messageArr[1];
+                this.view.initmap(messageArr[2],messageArr[4]);
+                this.view
                 var man:TestMan = new TestMan();
                 man.x = this.curX *10;
                 man.y = this.curY *10;
                 this.addChild(man);
                 this.manList.push(man);
+                this.playerIndex = 0;
             break;
             case "weekto":
+                if(parseInt(messageArr[1]) == this.playerIndex){
+                    this.curX = parseInt(messageArr[2]);
+                    this.curY = parseInt(messageArr[3]);
+                }
                 this.manList[parseInt(messageArr[1])].x = parseInt(messageArr[2])*10;
                 this.manList[parseInt(messageArr[1])].y = parseInt(messageArr[3])*10;
             break;
+            case "selfjoinroomsuccess":
+                this.startgame();
+                this.roomId = messageArr[1];
+                this.view.initmap(messageArr[2],messageArr[5]);
+                this.playerIndex = parseInt(messageArr[3]);
+                for(var i:number = 0;i<=this.playerIndex;i++){
+                    var man:TestMan = new TestMan();
+                    man.x = 1 *10;
+                    man.y = 1 *10;
+                    this.addChild(man);
+                    this.manList.push(man);
+                }
+            break;
+            case "otherjoinroomsuccess":
+                var man:TestMan = new TestMan();
+                man.x = 1 *10;
+                man.y = 1 *10;
+                this.addChild(man);
+                this.manList.push(man);
+            break;
             default:
-                //this.tishi(str);
+                this.tishi(str);
             break;
         }
     }
 
 
-    /**
-     * 创建游戏场景
-     * Create a game scene
-     */
-    private view:EngineMain;
-    public static webSocket:egret.WebSocket;
-    private createGameScene() {
-        this.manList = new Array<TestMan>();
-        this.view  = new EngineMain();
-        this.addChild(this.view);
-
-        var button = new ControlButton();
-        button.x = 550;
-        button.y = 900;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onup, this);
-
-        button = new ControlButton();
-        button.x =  550;
-        button.y = 1200;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.ondown, this);
-
-        button = new ControlButton();
-        button.x = 400;
-        button.y = 1050;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onleft, this);
-
-        button = new ControlButton();
-        button.x = 700;
-        button.y = 1050;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onright, this);
-
-        Main.webSocket = new egret.WebSocket();        
-        Main.webSocket.addEventListener(egret.ProgressEvent.SOCKET_DATA, this.onReceiveMessage, this);                            
-        Main.webSocket.addEventListener(egret.Event.CONNECT, this.onSocketOpen, this);    
-        Main.webSocket.connect("127.0.0.1",4788);
-            //    Main.webSocket.connect("39.105.5.178",4788);
-        // let sky = this.createBitmapByName("bg_jpg");
-        // this.addChild(sky);
-        // let stageW = this.stage.stageWidth;
-        // let stageH = this.stage.stageHeight;
-        // sky.width = stageW;
-        // sky.height = stageH;
-
-        // let topMask = new egret.Shape();
-        // topMask.graphics.beginFill(0x000000, 0.5);
-        // topMask.graphics.drawRect(0, 0, stageW, 172);
-        // topMask.graphics.endFill();
-        // topMask.y = 33;
-        // this.addChild(topMask);
-
-        // let icon = this.createBitmapByName("egret_icon_png");
-        // this.addChild(icon);
-        // icon.x = 26;
-        // icon.y = 33;
-
-        // let line = new egret.Shape();
-        // line.graphics.lineStyle(2, 0xffffff);
-        // line.graphics.moveTo(0, 0);
-        // line.graphics.lineTo(0, 117);
-        // line.graphics.endFill();
-        // line.x = 172;
-        // line.y = 61;
-        // this.addChild(line);
 
 
-        // let colorLabel = new egret.TextField();
-        // colorLabel.textColor = 0xffffff;
-        // colorLabel.width = stageW - 172;
-        // colorLabel.textAlign = "center";
-        // colorLabel.text = "Hello Egret";
-        // colorLabel.size = 24;
-        // colorLabel.x = 172;
-        // colorLabel.y = 80;
-        // this.addChild(colorLabel);
-
-        // let textfield = new egret.TextField();
-        // this.addChild(textfield);
-        // textfield.alpha = 0;
-        // textfield.width = stageW - 172;
-        // textfield.textAlign = egret.HorizontalAlign.CENTER;
-        // textfield.size = 24;
-        // textfield.textColor = 0xffffff;
-        // textfield.x = 172;
-        // textfield.y = 135;
-        // this.textfield = textfield;
-
-
-        //根据name关键字，异步获取一个json配置文件，name属性请参考resources/resource.json配置文件的内容。
-        // Get asynchronously a json configuration file according to name keyword. As for the property of name please refer to the configuration file of resources/resource.json.
-        RES.getResAsync("description_json", this.startAnimation, this)
-    }
-    private curX:number =1;
-    private curY:number =1;
-    private roomId:number;
-    private onup(e:egret.TouchEvent):void{
-        if(this.view.getTargetCanGo(this.curX,this.curY-1))
-            Main.webSocket.writeUTF("week,"+this.roomId+","+ this.curX +","+(this.curY-1));
-    }
-
-    private ondown(e:egret.TouchEvent):void{
-               if(this.view.getTargetCanGo(this.curX,this.curY+1))
-     Main.webSocket.writeUTF("week,"+this.roomId+","+ this.curX +","+(this.curY+1));
-    }
-
-    private onleft(e:egret.TouchEvent):void{
-              if(this.view.getTargetCanGo(this.curX-1,this.curY))
-        Main.webSocket.writeUTF("week,"+this.roomId+","+(this.curX-1)+","+ this.curY)
-    }
-
-        private onright(e:egret.TouchEvent):void{
-            console.log(this.view.getTargetCanGo(this.curX+1,this.curY));
-                  if(this.view.getTargetCanGo(this.curX+1,this.curY))
-                Main.webSocket.writeUTF("week,"+this.roomId+","+(this.curX-1)+","+ this.curY)
-    }
-
-    /**
-     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
-     */
-    private createBitmapByName(name: string) {
+    private createBitmapByName(name: string): egret.Bitmap {
         let result = new egret.Bitmap();
         let texture: egret.Texture = RES.getRes(name);
         result.texture = texture;
         return result;
     }
 
-    /**
-     * 描述文件加载成功，开始播放动画
-     * Description file loading is successful, start to play the animation
-     */
-    private startAnimation(result: string[]) {
+    private removeTargetStage(dis:egret.Sprite):void{
+        if(dis){
+            if(dis.parent)
+                dis.parent.removeChild(dis);
+        }
+    }
+
+    private textfield: egret.TextField;
+    private startAnimation(result: Array<any>): void {
+
+
         let parser = new egret.HtmlTextParser();
 
         let textflowArr = result.map(text => parser.parse(text));
@@ -313,8 +483,6 @@ class Main extends egret.DisplayObjectContainer {
             }
             let textFlow = textflowArr[count];
 
-            // 切换描述内容
-            // Switch to described content
             textfield.textFlow = textFlow;
             let tw = egret.Tween.get(textfield);
             tw.to({ "alpha": 1 }, 200);
@@ -325,6 +493,7 @@ class Main extends egret.DisplayObjectContainer {
 
         change();
     }
+
+
+
 }
-
-
