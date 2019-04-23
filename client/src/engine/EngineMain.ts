@@ -1,4 +1,6 @@
 class EngineMain{
+	public gametype:number;
+
 	public constructor() {
 		// super();
 
@@ -33,16 +35,41 @@ class EngineMain{
 
 	public init(st):void{
 		this._stage = st;
-		this.socketConnector = new SocketConnector("127.0.0.1",4788);
 
 		this.player = new Player;
 		this.player.x = 15;
 		this.player.y = 15;
 		// this._stage.addChild(this.player);
 
+
+
+
+
 		this._stage.addEventListener(egret.TouchEvent.TOUCH_TAP,this.onClick,this)
+		this.socketConnector = new SocketConnector("127.0.0.1",4788);
 	}
+	private desStr:string[] = ["AStar","AStar过程","点击查看道路","规划寻路"];
 	private onClick(e:egret.TouchEvent):void{
+		if(e.stageY < 15){
+			for(var i = 0;i<5;i++){
+				if(e.stageX >= i *30 +20 && e.stageX <= i *30 +20+15){
+					this.tabArr[i].choose(true);
+					this.gametype = i+1;
+					console.log(this.desStr[i]);
+				}else{
+					this.tabArr[i].choose(false);
+				}
+			}
+			return;
+		}
+	
+
+
+
+
+
+
+
 		let px = Math.floor((this.player.x - 5)/10);
 		let py = Math.floor((this.player.y - 5)/10);
 		let x = Math.floor((e.stageX - 5)/10);
@@ -54,8 +81,32 @@ class EngineMain{
 		this.tragetx = x;
 		this.tragety = y;
 
-		MapManager.instance.Astar(px,py,x,y);
+		if(this.gametype <	3)
+			MapManager.instance.Astar(px,py,x,y);
+		else if(this.gametype == 4)
+			MapManager.instance.findThcWay(px,py,x,y);
+		else if(this.gametype == 3){
+			var ways = MapManager.instance.displayWay(x,y);
+			// console.log(ways);
+			for(var i = 0;i<ways.length;i++){
+				for(var j = 0;j<ways[i].list.length;j++){
+					this.mapItemlist[ways[i].list[j].x][ways[i].list[j].y].setRoute();
+				}
+			}
+		}
+
+		
 	}
+	public disWayRoute(ways){
+		for(var i = 0;i<ways.length;i++){
+			for(var j = 0;j<ways[i].length;j++){
+				for(var m = 0;m<ways[i][j].list.length;m++){
+					this.mapItemlist[ways[i][j].list[m].x][ways[i][j].list[m].y].setRoute();
+				}
+			}
+		}
+	}
+
 	private player:Player;
 
 	private socketConnector:SocketConnector;
@@ -105,7 +156,18 @@ class EngineMain{
 		}
 
 		this._stage.addChild(this.player);
+
+		this.tabArr = [];
+		for(var i = 0;i<5;i++){
+			var tab = new TabItem;
+			tab.x = i *30 +20;
+			this._stage.addChild(tab);
+			this.tabArr.push(tab);
+		}
+		this.tabArr[0].choose(true);
+		this.gametype = 1;
 	}
+	private tabArr:TabItem[];
 
 	public resetRoute():void{
 		for(var i = 0;i<this.mapItemlist.length;i++){
@@ -133,7 +195,7 @@ class EngineMain{
 		// this.player.y = 5 + 10*this.tragety;
 
 
-		this.timeindex = setInterval(this.nextround.bind(this),20);
+		//this.timeindex = setInterval(this.nextround.bind(this),20);
 	}
 	private timeindex:number;
 

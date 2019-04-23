@@ -1,2 +1,2 @@
-declare class MainSkin extends eui.Skin{
+declare class UISkin extends eui.Skin{
 }

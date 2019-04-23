@@ -19,72 +19,236 @@ class MapManager {
 			}
 		}
 		// console.log(this.nodeList);.
-		// this.sortWay();
+		this.sortWay();
 
-		setInterval(this.sortWay.bind(this),2000);
+		// setInterval(this.sortWay.bind(this),2000);
 	}
 
-	private 
-	private waylist:Way[];
+
+
+	private waylist:{[key:string]:Way[]};
+	private waysById:{[key:number]:Way};
+
+	public displayWay(targetx,targety):Way[]{
+		if(this.waylist[this.getWayKey(this.nodeList[targetx][targety])]){
+			return this.waylist[this.getWayKey(this.nodeList[targetx][targety])];
+		}else{
+			return [this.waysById[this.nodeList[targetx][targety].wayId]];
+		}
+	}
 
 	// private curway:Way;
+	private findedNodes:{[key:string]:MapNode};
 	private sortWay():void{
-		this.waylist = [];
+		this.waylist = {};
+		this.waysById = {};
+		this.wayIndex = 0;
+		this.findedNodes = {};
 		this.findway(1,1,this.creatWay(this.nodeList[1][1]),-1,-1);
-
-		console.log(this.waylist);
+		this.findedNodes = null;
+		// console.log(this.waylist);
 	}
 
+	private wayIndex:number;
 	private creatWay(node:MapNode):Way{
 		var obj:Way = new Way;
 		obj.startPoint = node;
 		obj.list = [node];
-		this.waylist.push(obj);
+		obj.wayId = this.wayIndex;
+		this.wayIndex ++;
 		return obj;
 	}
 
+	private finishWay(node:MapNode,way:Way):void{
+		way.endPoint = node;
+		this.putWay(way);
+		// if(!this.isExistTheWay(way))
+		// {
+		// 	this.putWay(way);
+		// }
+		// this.waylist[this.getWayKey(node)] = this.waylist[this.getWayKey(node)] = 
+	}
+
+	private putWay(way:Way):void{
+		var list = this.waylist[this.getWayKey(way.startPoint)]; 
+		if(list == null){
+			list = this.waylist[this.getWayKey(way.startPoint)] = [];
+		}
+		list.push(way);
+		
+		var list = this.waylist[this.getWayKey(way.endPoint)]; 
+		if(list == null){
+			list = this.waylist[this.getWayKey(way.endPoint)] = [];
+		}
+		list.push(way);
+
+		this.waysById[way.wayId] = way;
+	}
+
+	private isExistTheWay(startNode:MapNode,nextNode:MapNode):boolean{
+		// console.log(way,this.waylist);
+		var list = this.waylist[this.getWayKey(startNode)]; 
+		if(list){
+			for(var i = 0;i<list.length;i++){
+				if(list[i].endPoint == startNode){
+					if(list[i].list.length > 1){
+						if(list[i].list[list[i].list.length - 1] == nextNode)
+							return true;
+					}
+				}else{
+					if(list[i].list.length > 1){
+						if(list[i].list[1] == nextNode)
+							return true;
+					}
+				}
+			}
+		}
+
+	
+		// 	for(var i = 0;i<list.length;i++){
+		// 		if(list[i].startPoint == way.startPoint){
+		// 			if(list[i].endPoint == way.endPoint){
+		// 				return true;
+		// 			}
+		// 		}else if(list[i].startPoint = way.endPoint){
+		// 				if(list[i].endPoint == way.startPoint){
+		// 				return true;
+		// 			}
+		// 		}
+		// 	}
+
+		// }
+		return false;
+	}
+
+	private getWayKey(node:MapNode):string{
+		return node.x + "," + node.y;
+	}
+
 	private findway(curx:number,cury:number,way:Way,comx:number,comy:number):void{
-		var maybeNextWay:MapNode[] = [];
+		if(this.findedNodes[curx + "," + cury])
+			return;
+		
+		var maybeNextNode:MapNode[] = [];
 		var node:MapNode;
 
-		console.log(comx,comy);
+		// console.log(curx,cury);
+
 		if(curx >  0 && !(curx-1 == comx && cury == comy)){
 			node = this.nodeList[curx-1][cury];
 			if(node.type != 0){
-				maybeNextWay.push(node);
+				maybeNextNode.push(node);
 			}
 		}
 		if(curx < this.nodeList.length && !(curx+1 == comx && cury == comy)){
 			node = this.nodeList[curx+1][cury];
 			if(node.type != 0){
-				maybeNextWay.push(node);
+				maybeNextNode.push(node);
 			}
 		}
 		if(cury >0 && !(curx == comx && cury-1 == comy)){
 			node = this.nodeList[curx][cury-1];
 			if(node.type != 0){
-				maybeNextWay.push(node);
+				maybeNextNode.push(node);
 			}
 		}
 		if(cury < this.nodeList[curx].length && !(curx == comx && cury+1 == comy)){
 			node = this.nodeList[curx][cury+1];
 			if(node.type != 0){
-				maybeNextWay.push(node);
+				maybeNextNode.push(node);
 			}
 		}
+		this.nodeList[curx][cury].wayId = way.wayId;
 		way.list.push(this.nodeList[curx][cury]);
-		if(maybeNextWay.length == 1){
-			this.findway(maybeNextWay[0].x,maybeNextWay[0].y,way,curx,cury)
-		}else if(maybeNextWay.length > 1){
-			way.endPoint = this.nodeList[curx][cury];
-			for(var i = 0;i<maybeNextWay.length;i++){
-				this.findway(maybeNextWay[i].x,maybeNextWay[i].y,this.creatWay(this.nodeList[curx][cury]),curx,cury);
+		this.findedNodes[curx + "," + cury] = this.nodeList[curx][cury];
+		if(maybeNextNode.length == 1){
+			this.findway(maybeNextNode[0].x,maybeNextNode[0].y,way,curx,cury)
+		}else if(maybeNextNode.length > 1){
+			// way.endPoint = this.nodeList[curx][cury];
+			
+			if(comx != -1&&comy != -1){
+				this.finishWay(this.nodeList[curx][cury],way);
+			}
+
+			for(var i = 0;i<maybeNextNode.length;i++){
+				if(!this.isExistTheWay(this.nodeList[curx][cury],maybeNextNode[i])){
+					this.findway(maybeNextNode[i].x,maybeNextNode[i].y,this.creatWay(this.nodeList[curx][cury]),curx,cury);
+				}
 			}
 		}else{
-
+			this.finishWay(this.nodeList[curx][cury],way);
 		}
 
 
+	}
+
+	public targetWay:Way[];
+	private findedWays:{[key:number]:Way};
+	public findThcWay(curx,cury,targetx,targety):void{
+		var startTime:number = new Date().getTime();
+
+		if(this.waylist[this.getWayKey(this.nodeList[targetx][targety])]){
+			this.targetWay = this.waylist[this.getWayKey(this.nodeList[targetx][targety])];
+		}else{
+			this.targetWay = [this.waysById[this.nodeList[targetx][targety].wayId]];
+		}
+		this.canTranslateWays = [];
+		this.findedWays = {};
+		var maybeNextWay:Way[];
+		if(this.waylist[this.getWayKey(this.nodeList[curx][cury])]){
+			maybeNextWay = this.waylist[this.getWayKey(this.nodeList[curx][cury])];
+		}else{
+			maybeNextWay = [this.waysById[this.nodeList[curx][cury].wayId]];
+		}
+		for(var i = 0;i<maybeNextWay.length;i++){
+			this.findNextWay(maybeNextWay[i],[],maybeNextWay[i].startPoint);
+			this.findNextWay(maybeNextWay[i],[],maybeNextWay[i].endPoint);
+		}
+		EngineMain.instance.disWayRoute(this.canTranslateWays);
+
+		console.log("规划消耗时间"+(new Date().getTime() - startTime));
+		console.log(this.canTranslateWays);
+	}
+
+
+	public findNextWay(curway:Way,ways:Way[],from):void{
+		if(this.findedWays[curway.wayId])
+			return;
+		var maybeNextWay:Way[]= [];
+		var com:MapNode;
+		if(from == curway.endPoint && this.waylist[this.getWayKey(curway.startPoint)]){
+			maybeNextWay = maybeNextWay.concat(this.waylist[this.getWayKey(curway.startPoint)]);
+			com = curway.startPoint;
+		}
+		if(from == curway.startPoint &&this.waylist[this.getWayKey(curway.endPoint)]){
+			maybeNextWay = maybeNextWay.concat(this.waylist[this.getWayKey(curway.endPoint)]);
+			com = curway.endPoint;
+		}
+
+		ways.push(curway);
+		this.findedWays[curway.wayId] = curway;
+
+		if(this.isStayTarget(curway)){
+			this.canTranslateWays.push(ways);
+			return;
+		}
+		if(maybeNextWay){
+			for(var i = 0;i<maybeNextWay.length;i++){
+				this.findNextWay(maybeNextWay[i],ways.concat(),com);
+			}
+		}
+	}
+
+	private canTranslateWays:Way[][];
+
+	public isStayTarget(way:Way):boolean{
+		for(var i = 0;i<this.targetWay.length;i++){
+			if(this.targetWay[i] == way)
+				return true;
+		}
+
+	
+		return false;
 	}
 
 
@@ -98,6 +262,8 @@ class MapManager {
 	private routeArr:egret.Point[][];
 
 	public Astar(curx,cury,targetx,targety):void{
+
+		var startTime:number = new Date().getTime();
 		this.curStep = 0;
 		this.routeArr = [];
 		this.nextList = [];
@@ -112,7 +278,10 @@ class MapManager {
 		// 	}
 		// }
 
-		this.timeindex = setInterval(this.nextround.bind(this),20);
+		if(EngineMain.instance.gametype == 2)
+			this.timeindex = setInterval(this.nextround.bind(this),20);
+		else
+			console.log("Astar消耗时间"+(new Date().getTime() - startTime));
 	}
 	private timeindex:number;
 
@@ -156,7 +325,8 @@ class MapManager {
 
 		// if(this.curStep < arr.length)
 
-		// this.nextround();
+		if(EngineMain.instance.gametype == 1)
+			this.nextround();
 
 	}
 
@@ -420,6 +590,7 @@ class Way{
 	startPoint:MapNode;
 	endPoint:MapNode;
 	list:MapNode[];
+	wayId:number;
 }
 
 

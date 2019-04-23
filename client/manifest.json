@@ -16,6 +16,8 @@
 		"bin-debug/com/entity/MapNode.js",
 		"bin-debug/com/entity/MapRoute.js",
 		"bin-debug/com/entity/Player.js",
+		"bin-debug/com/entity/TabItem.js",
+		"bin-debug/com/layer/GameLayer.js",
 		"bin-debug/com/scene/MapGenerate.js",
 		"bin-debug/com/scene/MapManager.js",
 		"bin-debug/com/socket/SocketConnector.js",

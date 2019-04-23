@@ -36,6 +36,10 @@ var MapItem = (function (_super) {
         // this.cacheAsBitmap=true;
     }
     MapItem.prototype.removeRoute = function () {
+        this.bitmap.x = 5;
+        this.bitmap.y = 5;
+        this.bitmap.width = 10;
+        this.bitmap.height = 10;
         if (this.type == 0) {
             this.bitmap.texture = RES.getRes("MapItemBg_png");
         }
@@ -49,6 +53,10 @@ var MapItem = (function (_super) {
     };
     MapItem.prototype.setRoute = function () {
         this.bitmap.texture = RES.getRes("route_png");
+        this.bitmap.x = 6;
+        this.bitmap.y = 6;
+        this.bitmap.width = 8;
+        this.bitmap.height = 8;
     };
     MapItem.prototype.setRouteing = function () {
         this.bitmap.texture = RES.getRes("red_png");

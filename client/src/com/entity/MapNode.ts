@@ -3,6 +3,8 @@ class MapNode {
 	public y:number;
 
 	public type:number;
+
+	public wayId:number;
 	public constructor() {
 	}
 }

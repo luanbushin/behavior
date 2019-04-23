@@ -6,10 +6,11 @@ var SocketConnector = (function () {
         this.initSocket(ip, port);
     }
     SocketConnector.prototype.initSocket = function (ip, port) {
-        this._socket = new egret.WebSocket();
-        this._socket.addEventListener(egret.ProgressEvent.SOCKET_DATA, this.onReceiveMessage, this);
-        this._socket.addEventListener(egret.Event.CONNECT, this.onSocketConnect, this);
-        this._socket.connect(ip, port);
+        // this._socket = new egret.WebSocket();        
+        // this._socket.addEventListener(egret.ProgressEvent.SOCKET_DATA, this.onReceiveMessage, this);                            
+        // this._socket.addEventListener(egret.Event.CONNECT, this.onSocketConnect, this);    
+        // this._socket.connect(ip,port);
+        EngineMain.instance.initmap(MapManager.instance.getMapData(), MapManager.instance.endPoint);
     };
     SocketConnector.prototype.onReceiveMessage = function (e) {
         console.log("收到数据");
