@@ -31,11 +31,14 @@ class MapItem extends egret.Sprite{
 
 	private type:number;
 
-	public removeRoute():void{
+	public removeRoute(num = -1):void{
 		this.bitmap.x = 5;
 		this.bitmap.y = 5;
 		this.bitmap.width=10;
 		this.bitmap.height=10;
+		if(num > -1)
+			this.type = num;
+
 		if(this.type == 0){
 			this.bitmap.texture=RES.getRes("MapItemBg_png");
 		}else if(this.type == 9){

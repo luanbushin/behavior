@@ -48,19 +48,25 @@ class EngineMain{
 		this._stage.addEventListener(egret.TouchEvent.TOUCH_TAP,this.onClick,this)
 		this.socketConnector = new SocketConnector("127.0.0.1",4788);
 	}
-	private desStr:string[] = ["AStar","AStar过程","点击查看道路","规划寻路"];
+	private desStr:string[] = ["AStar","AStar过程","点击查看道路","规划寻路","添加障碍"];
 	private onClick(e:egret.TouchEvent):void{
 		if(e.stageY < 15){
-			for(var i = 0;i<5;i++){
+			var click = false;
+			for(var i = 0;i<6;i++){
 				if(e.stageX >= i *30 +20 && e.stageX <= i *30 +20+15){
 					this.tabArr[i].choose(true);
 					this.gametype = i+1;
+					click = true;
 					console.log(this.desStr[i]);
 				}else{
 					this.tabArr[i].choose(false);
 				}
 			}
+			if(!click)
+				this.tabArr[this.gametype-1].choose(true);
+			
 			return;
+			
 		}
 	
 
@@ -75,6 +81,17 @@ class EngineMain{
 		let x = Math.floor((e.stageX - 5)/10);
 		let y = Math.floor((e.stageY - 5)/10);
 
+		if(this.gametype <	5){
+			if(MapManager.instance.nodeList[x][y].type == 0)
+				return;
+		}else if(this.gametype == 5){
+			MapManager.instance.changeWay(x,y,0)
+			this.changeMapItem(x,y,0);
+		}else if(this.gametype == 6){
+			MapManager.instance.changeWay(x,y,1)
+			this.changeMapItem(x,y,1);
+		}
+
 		this.resetRoute();
 
 
@@ -87,7 +104,7 @@ class EngineMain{
 			MapManager.instance.findThcWay(px,py,x,y);
 		else if(this.gametype == 3){
 			var ways = MapManager.instance.displayWay(x,y);
-			// console.log(ways);
+			console.log(ways);
 			for(var i = 0;i<ways.length;i++){
 				for(var j = 0;j<ways[i].list.length;j++){
 					this.mapItemlist[ways[i].list[j].x][ways[i].list[j].y].setRoute();
@@ -158,7 +175,7 @@ class EngineMain{
 		this._stage.addChild(this.player);
 
 		this.tabArr = [];
-		for(var i = 0;i<5;i++){
+		for(var i = 0;i<6;i++){
 			var tab = new TabItem;
 			tab.x = i *30 +20;
 			this._stage.addChild(tab);
@@ -167,6 +184,10 @@ class EngineMain{
 		this.tabArr[0].choose(true);
 		this.gametype = 1;
 	}
+	public changeMapItem(x,y,type):void{
+		this.mapItemlist[x][y].removeRoute(type);
+	}
+
 	private tabArr:TabItem[];
 
 	public resetRoute():void{

@@ -4,7 +4,7 @@ var __reflect = (this && this.__reflect) || function (p, c, t) {
 var EngineMain = (function () {
     function EngineMain() {
         // super();
-        this.desStr = ["AStar", "AStar过程", "点击查看道路", "规划寻路"];
+        this.desStr = ["AStar", "AStar过程", "点击查看道路", "规划寻路", "添加障碍"];
         // mapManager.getInstance().creatMap();
         // var item:MapItem 
         // for(var i:number = 0;i<mapManager.getInstance().maplist.length;i++){
@@ -34,22 +34,38 @@ var EngineMain = (function () {
     };
     EngineMain.prototype.onClick = function (e) {
         if (e.stageY < 15) {
-            for (var i = 0; i < 5; i++) {
+            var click = false;
+            for (var i = 0; i < 6; i++) {
                 if (e.stageX >= i * 30 + 20 && e.stageX <= i * 30 + 20 + 15) {
                     this.tabArr[i].choose(true);
                     this.gametype = i + 1;
+                    click = true;
                     console.log(this.desStr[i]);
                 }
                 else {
                     this.tabArr[i].choose(false);
                 }
             }
+            if (!click)
+                this.tabArr[this.gametype - 1].choose(true);
             return;
         }
         var px = Math.floor((this.player.x - 5) / 10);
         var py = Math.floor((this.player.y - 5) / 10);
         var x = Math.floor((e.stageX - 5) / 10);
         var y = Math.floor((e.stageY - 5) / 10);
+        if (this.gametype < 5) {
+            if (MapManager.instance.nodeList[x][y].type == 0)
+                return;
+        }
+        else if (this.gametype == 5) {
+            MapManager.instance.changeWay(x, y, 0);
+            this.changeMapItem(x, y, 0);
+        }
+        else if (this.gametype == 6) {
+            MapManager.instance.changeWay(x, y, 1);
+            this.changeMapItem(x, y, 1);
+        }
         this.resetRoute();
         this.tragetx = x;
         this.tragety = y;
@@ -59,7 +75,7 @@ var EngineMain = (function () {
             MapManager.instance.findThcWay(px, py, x, y);
         else if (this.gametype == 3) {
             var ways = MapManager.instance.displayWay(x, y);
-            // console.log(ways);
+            console.log(ways);
             for (var i = 0; i < ways.length; i++) {
                 for (var j = 0; j < ways[i].list.length; j++) {
                     this.mapItemlist[ways[i].list[j].x][ways[i].list[j].y].setRoute();
@@ -115,7 +131,7 @@ var EngineMain = (function () {
         }
         this._stage.addChild(this.player);
         this.tabArr = [];
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < 6; i++) {
             var tab = new TabItem;
             tab.x = i * 30 + 20;
             this._stage.addChild(tab);
@@ -123,6 +139,9 @@ var EngineMain = (function () {
         }
         this.tabArr[0].choose(true);
         this.gametype = 1;
+    };
+    EngineMain.prototype.changeMapItem = function (x, y, type) {
+        this.mapItemlist[x][y].removeRoute(type);
     };
     EngineMain.prototype.resetRoute = function () {
         for (var i = 0; i < this.mapItemlist.length; i++) {

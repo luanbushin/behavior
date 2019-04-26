@@ -35,11 +35,14 @@ var MapItem = (function (_super) {
         return _this;
         // this.cacheAsBitmap=true;
     }
-    MapItem.prototype.removeRoute = function () {
+    MapItem.prototype.removeRoute = function (num) {
+        if (num === void 0) { num = -1; }
         this.bitmap.x = 5;
         this.bitmap.y = 5;
         this.bitmap.width = 10;
         this.bitmap.height = 10;
+        if (num > -1)
+            this.type = num;
         if (this.type == 0) {
             this.bitmap.texture = RES.getRes("MapItemBg_png");
         }

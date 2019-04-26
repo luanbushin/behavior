@@ -3,6 +3,7 @@ var __reflect = (this && this.__reflect) || function (p, c, t) {
 };
 var MapNode = (function () {
     function MapNode() {
+        this.isfinded = false;
     }
     return MapNode;
 }());

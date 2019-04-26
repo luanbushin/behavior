@@ -1,5 +1,5 @@
 class MapManager {
-	private nodeList:Array<Array<MapNode>>;
+	public nodeList:Array<Array<MapNode>>;
 
 	public initNodes(maplist:Array<Array<number>>):void{
 		this.nodeList = [];
@@ -38,14 +38,14 @@ class MapManager {
 	}
 
 	// private curway:Way;
-	private findedNodes:{[key:string]:MapNode};
+	// private findedNodes:{[key:string]:MapNode};
 	private sortWay():void{
 		this.waylist = {};
 		this.waysById = {};
 		this.wayIndex = 0;
-		this.findedNodes = {};
+		// this.findedNodes = {};
 		this.findway(1,1,this.creatWay(this.nodeList[1][1]),-1,-1);
-		this.findedNodes = null;
+		// this.findedNodes = null;
 		// console.log(this.waylist);
 	}
 
@@ -67,22 +67,6 @@ class MapManager {
 		// 	this.putWay(way);
 		// }
 		// this.waylist[this.getWayKey(node)] = this.waylist[this.getWayKey(node)] = 
-	}
-
-	private putWay(way:Way):void{
-		var list = this.waylist[this.getWayKey(way.startPoint)]; 
-		if(list == null){
-			list = this.waylist[this.getWayKey(way.startPoint)] = [];
-		}
-		list.push(way);
-		
-		var list = this.waylist[this.getWayKey(way.endPoint)]; 
-		if(list == null){
-			list = this.waylist[this.getWayKey(way.endPoint)] = [];
-		}
-		list.push(way);
-
-		this.waysById[way.wayId] = way;
 	}
 
 	private isExistTheWay(startNode:MapNode,nextNode:MapNode):boolean{
@@ -125,8 +109,124 @@ class MapManager {
 		return node.x + "," + node.y;
 	}
 
+	private getWays(x,y):Way[]{
+		if(this.waylist[this.getWayKey(this.nodeList[x][y])]){
+			return this.waylist[this.getWayKey(this.nodeList[x][y])];
+		}
+		return null;
+	}
+
+	private putWay(way:Way):void{
+		var list = this.waylist[this.getWayKey(way.startPoint)]; 
+		if(list == null){
+			list = this.waylist[this.getWayKey(way.startPoint)] = [];
+		}
+		if(list.indexOf(way) == -1)
+			list.push(way);
+		
+		var list = this.waylist[this.getWayKey(way.endPoint)]; 
+		if(list == null){
+			list = this.waylist[this.getWayKey(way.endPoint)] = [];
+		}
+		if(list.indexOf(way) == -1)
+			list.push(way);
+
+		this.waysById[way.wayId] = way;
+	}
+
+	private removeWay(str):void{
+		// console.log(str);
+		delete this.waylist[str];
+	}
+
+	public changeWay(x:number,y:number,totype:number):void{	
+		if(this.nodeList[x][y].type == totype)
+			return;
+		this.nodeList[x][y].type = totype;
+		
+		if(totype == 0){
+			var ways:Way[] = this.getWays(x,y);
+			console.log(ways);
+			if(ways){
+				for(var i = 0;i<ways.length;i++){
+					var way:Way = ways[i];
+					if(way.startPoint == this.nodeList[x][y]){
+						if(way.list.length > 1){
+							way.startPoint = way.list[1];
+							way.list.shift();
+							this.putWay(way);
+						}
+						else{
+							ways.splice(i,1);
+							i--;
+						}
+					}else if(way.endPoint == this.nodeList[x][y]){
+						if(way.list.length > 1){
+							way.endPoint = way.list[way.list.length - 2];
+							way.list.pop();
+							this.putWay(way);
+						}
+						else{
+							ways.splice(i,1);
+							i--;
+						}
+					}
+				}
+				this.removeWay(this.getWayKey(this.nodeList[x][y]));	
+			}else{
+				var way = this.waysById[this.nodeList[x][y].wayId];
+				let index = way.list.indexOf(this.nodeList[x][y]);
+			
+				// if(way.startPoint == this.nodeList[x][y]){
+				this.removeWay(this.getWayKey(way.startPoint));
+				if(index != 1){
+					var newway:Way = this.creatWay(way.startPoint);
+					newway.list = way.list.slice(0,index);
+					for(var i = 0;i<newway.list.length;i++){
+						newway.list[i].wayId = newway.wayId;
+					}
+					newway.endPoint = newway.list[index - 1];
+					this.putWay(newway);
+				}
+
+				if(index != way.list.length - 2){
+					way.startPoint = way.list[index + 1];
+					way.list.splice(0,index+1);
+					this.putWay(way);
+				}else{
+					delete this.waysById[way.wayId];
+					this.removeWay(this.getWayKey(way.endPoint));
+				}
+				// }else if(way.endPoint == this.nodeList[x][y]){
+				// 	if(index != way.list.length - 2){
+				// 		var newway:Way = this.creatWay(way.endPoint);
+				// 		newway.list = way.list.slice(0,way.list.length - 1 - index);
+				// 		newway.endPoint = newway.list[index + 1];
+				// 		this.putWay(newway);
+				// 	}
+
+				// 	if(index != 1){
+				// 		way.startPoint = way.list[index - 1];
+				// 		way.list.splice(index,way.list.length - index);
+				// 		this.putWay(way);
+				// 	}else{
+				// 		delete this.waysById[way.wayId];
+				// 	}
+				// 	this.removeWay(this.getWayKey(this.nodeList[x][y]));
+				// }
+				// console.log(way.list.slice(0,10));
+			}
+		}
+		else if(totype != 0){
+			console.log("ddddddddd");
+		}
+	}
+
+
+
 	private findway(curx:number,cury:number,way:Way,comx:number,comy:number):void{
-		if(this.findedNodes[curx + "," + cury])
+				// console.log(this.nodeList[curx][cury]);
+		if(this.nodeList[curx][cury].isfinded)
 			return;
 		
 		var maybeNextNode:MapNode[] = [];
@@ -160,7 +260,8 @@ class MapManager {
 		}
 		this.nodeList[curx][cury].wayId = way.wayId;
 		way.list.push(this.nodeList[curx][cury]);
-		this.findedNodes[curx + "," + cury] = this.nodeList[curx][cury];
+		// this.findedNodes[curx + "," + cury] = 
+		this.nodeList[curx][cury].isfinded = true;
 		if(maybeNextNode.length == 1){
 			this.findway(maybeNextNode[0].x,maybeNextNode[0].y,way,curx,cury)
 		}else if(maybeNextNode.length > 1){
