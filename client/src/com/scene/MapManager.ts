@@ -532,6 +532,8 @@ class MapManager {
 	public getMapData():string{
 		var 	mapStr = "";
 		this.creatBaseMap(this._width,this._height);
+
+		this.joinRoom(6,10,10,20,1);
 		for(var  i:number = 0;i < this._width*2+1;i++){
 			for(var  j:number = 0;j<this._height*2+1;j++){
 				mapStr+=this.maplist[i][j]+";";
@@ -542,6 +544,28 @@ class MapManager {
 	}
 	private _width:number = 63;
 	private _height:number = 33;
+
+
+	private joinRoom(minw,maxw,minh,maxh,trynum):void{
+		var num = 0;
+		while(num < trynum){
+			var w = Math.floor(Math.random()*(maxw - minw))+minw;
+			var h = Math.floor(Math.random()*(maxh - minh))+minh;
+			
+			var x = Math.floor(Math.random()*(this._width*2-w));
+			var y = Math.floor(Math.random()*(this._height*2-h));
+
+			for(var i = 0;i<=w;i++){
+				for(var j = 0;j<=h;j++){
+					if(i == 0||j==0||i == w||j==h)
+						this.maplist[i+w][j+h] = 0;
+					else
+						this.maplist[i+w][j+h] = 1;
+				}
+			}
+			num++;
+		}
+	}
 
 	public maplist:Array<Array<number>>;
 	public disposeList:Array<Array<number>>;
